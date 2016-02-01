@@ -1,0 +1,1005 @@
+FORMAT: 1A
+HOST: http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/
+
+# Finix Payments API 
+
+A simple payments API for platforms and marketplaces. 
+
+## Authentication
+To communicate with the Finix API, you'll need to authenticate your requests with a username and password. For the sandbox environment please use the following credentials: 
+- Username: `USwyuGJdVcsRTzDeX9smLVGQ` 
+- Password: `968cb207-1abb-4100-9425-9a723e99eb10`
+
+To "configure", just supply your username as basic auth (-u) in the header of each request as follows:
+
+```curl
+-u USwyuGJdVcsRTzDeX9smLVGQ:968cb207-1abb-4100-9425-9a723e99eb10
+```
+
+Now let's try fetching a Payment Instrument  resource (i.e. a bank account) just to make sure everything is in working order. Copy and paste the following CURL request into your terminal:
+
+```curl
+curl http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIi98CoYWpQZi8w7ZimJxuJ \
+    -H "Content-Type: application/vnd.json+api" \
+    -u  USwyuGJdVcsRTzDeX9smLVGQ:968cb207-1abb-4100-9425-9a723e99eb10
+```
+
+You should have recieved the following JSON response: 
+```json
+{
+  "id" : "PIi98CoYWpQZi8w7ZimJxuJ",
+  "finger_print" : null,
+  "tags" : { },
+  "bank_code" : "123123123",
+  "country" : "USA",
+  "currency" : "USD",
+  "created_at" : "2016-01-25T19:53:49.403533",
+  "updated_at" : "2016-01-25T19:53:49.403533",
+  "_links" : {
+    "self" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIi98CoYWpQZi8w7ZimJxuJ"
+    },
+    "verifications" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIi98CoYWpQZi8w7ZimJxuJ/verifications"
+    }
+  }
+}
+```
+
+Great! Let's move on and we'll show you a few of the main workflows. 
+
+
+## Debiting a Card
+Before we can charge a card we need to create an `Identity` resource which represents a person or business. In this case, the `Identity` will represent the cardholder (i.e. buyer). Let's create one now and add a card so we can charge them.
+
+### Create an Identity (i.e. buyer)
+```curl
+curl http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities \
+    -H "Content-Type: application/vnd.json+api" \
+    -u USwyuGJdVcsRTzDeX9smLVGQ:968cb207-1abb-4100-9425-9a723e99eb10 \
+    -d '{"tags": {"key": "value"}, "entity": {"last_name": "saget", "phone": "1234567890", "personal_address": {"city": "San Mateo", "country": "USA", "region": "CA", "line2": "Apartment 7", "line1": "741 Douglass St", "postal_code": "94114"}, "business_name": "business inc", "business_address": {"city": "San Mateo", "country": "USA", "region": "CA", "line2": "Apartment 8", "line1": "741 Douglass St", "postal_code": "94114"}, "tax_id": "5779", "business_type": "LIMITED_LIABILITY_COMPANY", "business_phone": "+1 (408) 756-4497", "first_name": "dwayne", "dob": {"year": 1978, "day": 27, "month": 5}, "business_tax_id": "123456789", "doing_business_as": "doingBusinessAs", "email": "user@example.org"}}'
+```
+
+You should recieve a JSON response that looks similar to the following: 
+```json
+{
+  "id" : "IDe1AVug8nRAjGux1wY5JJLa",
+  "entity" : {
+    "first_name" : "dwayne",
+    "last_name" : "saget",
+    "email" : "user@example.org",
+    "business_name" : "business inc",
+    "business_type" : "LIMITED_LIABILITY_COMPANY",
+    "doing_business_as" : "doingBusinessAs",
+    "phone" : "1234567890",
+    "business_phone" : "+1 (408) 756-4497",
+    "tax_id" : "5779",
+    "business_tax_id" : "123456789",
+    "personal_address" : {
+      "line1" : "741 Douglass St",
+      "line2" : "Apartment 7",
+      "city" : "San Mateo",
+      "region" : "CA",
+      "postal_code" : "94114",
+      "country" : "USA"
+    },
+    "business_address" : {
+      "line1" : "741 Douglass St",
+      "line2" : "Apartment 8",
+      "city" : "San Mateo",
+      "region" : "CA",
+      "postal_code" : "94114",
+      "country" : "USA"
+    },
+    "mcc" : null,
+    "dob" : {
+      "day" : 27,
+      "month" : 5,
+      "year" : 1978
+    },
+    "max_transaction_amount" : 0,
+    "settlement_bank_account" : null,
+    "settlement_currency" : "USD"
+  },
+  "tags" : {
+    "key" : "value"
+  },
+  "created_at" : "2016-01-26T07:56:44.902",
+  "updated_at" : "2016-01-26T07:56:44.902",
+  "_links" : {
+    "self" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDqxcvkwBdF8gmUMXKW368jL"
+    },
+    "underwriting" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDqxcvkwBdF8gmUMXKW368jL/merchants"
+    },
+    "verifications" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDqxcvkwBdF8gmUMXKW368jL/verifications"
+    }
+  }
+}
+```
+You'll want to store the `id` of the newly created Identity resource as you'll reference it later. Going forward our CURL requests will use the symbol `:identity_id` to denote where you should interpolate the received `id`. 
+
+### Create a Payment Instrument (i.e. card)
+Now that we have an Identity resource representing our buyer, we'll need to create a Payment Instrument which can represent either a card or bank account. In this instance we'll create a card with the following request (note you'll need to interpolate your own `:identity_id` from the previous request): 
+```curl
+curl http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments \
+-H "Content-Type: application/vnd.json+api" \
+-u USwyuGJdVcsRTzDeX9smLVGQ:968cb207-1abb-4100-9425-9a723e99eb10 \
+-d '{"expiration_year": 2020, "number": "4242424242424242", "expiration_month": 12, "address": {"city": "San Mateo", "country": "USA", "region": "CA", "line2": "Apartment 7", "line1": "741 Douglass St", "postal_code": "94114"}, "security_code": "112", "type": "PAYMENT_CARD", "identity": "{:identity_id}"}'
+```
+
+If you properly interpolated the `:identity_id` you'll recieve the following request: 
+```json
+{
+  "id" : "PIvdu4jPEvrtjo9G7ZFSFyEB",
+  "finger_print" : null,
+  "tags" : { },
+  "expiration_month" : 12,
+  "expiration_year" : 2020,
+  "last_four" : "4242",
+  "created_at" : "2016-01-26T08:09:06.453",
+  "updated_at" : "2016-01-26T08:09:06.453",
+  "_links" : {
+    "self" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIvdu4jPEvrtjo9G7ZFSFyEB"
+    },
+    "verifications" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIvdu4jPEvrtjo9G7ZFSFyEB/verifications"
+    }
+  }
+}
+```
+Be sure to store the `id` of your newly minted `Payment Instrument`. We'll refer to that later by the symbol `:payment_instrument_id`.
+
+### Create a Transfer (i.e. debit the card)
+At this point we've created resources representing the buyer and their card. Now it's time to collect.
+
+To debit a card, you'll need to create a `Transfer`. What's a `Transfer`? Glad you asked! A `Transfer` is basically any omnidirectional flow of funds. In otherwords, a `Transfer` can be a debit to a card, a credit to a bank account, or even a refund. For now let's focus on charging a card. 
+
+To do this we'll supply the buyer's `payment_instrument_id` as the `source`.
+NOTE: For the purposes of this sandbox account, you'll see the request body includes `processor` and  `identity` fields, which will be removed. 
+```curl
+curl http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers \
+    -H "Content-Type: application/vnd.json+api" \
+    -u USwyuGJdVcsRTzDeX9smLVGQ:968cb207-1abb-4100-9425-9a723e99eb10 \
+    -d '{"currency": "USD", "amount": "100", "processor": "LITLE_V1", "identity": "IDrGNFoCRV6SuGLHwkU8FVv3", "source": "{:payment_instrument_id}"}'
+```
+
+If the Transfer was successful you'll see the following response: 
+```json
+{
+  "id" : "TRcvpy7YfYcrmhNPryEUSCze",
+  "amount" : 100,
+  "tags" : { },
+  "state" : "PENDING",
+  "trace_id" : null,
+  "currency" : "USD",
+  "source" : "PI4Jg1E76puSKSNFsvsKTsRL",
+  "destination" : null,
+  "created_at" : "2016-01-26T08:22:14.126",
+  "updated_at" : "2016-01-26T08:22:14.126",
+  "_links" : {
+    "self" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers/TRcvpy7YfYcrmhNPryEUSCze"
+    },
+    "reversals" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers/TRcvpy7YfYcrmhNPryEUSCze/reversals"
+    }
+  }
+```
+Simple enough, right? You'll also want to store the `id` from that `Transfer` for your records, and for the last section of this guide where we'll be showing you how to issue a refund. We'll refer to that later by the symbol `:transfer_id`.
+
+### Reverse the Transfer (i.e. issue a refund)
+What if we need to issue a refund to the buyer? First, you'll need to take the previously stored `:transfer_id` and interpolate it into the following url path. Then you'll need to pass the  `:payment_instrument_id` and specify how much you'd like to refund. The amount can be equal to or less than the original debit.  
+
+NOTE: For the purposes of this sandbox account, you'll see the request body includes `processor` and  `identity` fields, which will be removed. 
+```curl
+curl http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers/:transfer_id/reversals \
+    -H "Content-Type: application/vnd.json+api" \
+    -u USwyuGJdVcsRTzDeX9smLVGQ:968cb207-1abb-4100-9425-9a723e99eb10 \
+    -d '{"currency": "USD", "amount": 100, "processor": "LITLE_V1", "identity": "IDrGNFoCRV6SuGLHwkU8FVv3", "source": "{:payment_instrument_id}"}'
+```
+
+Here's the expected response: 
+```json
+{
+  "id" : "TR9Lj1jnCopfyfXG9JmppWsr",
+  "amount" : 100,
+  "tags" : { },
+  "state" : "PENDING",
+  "trace_id" : null,
+  "currency" : "USD",
+  "source" : null,
+  "destination" : "PI4Jg1E76puSKSNFsvsKTsRL",
+  "created_at" : "2016-01-26T08:38:40.308975",
+  "updated_at" : "2016-01-26T08:38:40.308975",
+  "_links" : {
+    "self" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers/TR9Lj1jnCopfyfXG9JmppWsr"
+    },
+    "parent" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers/TRcvpy7YfYcrmhNPryEUSCze"
+    }
+  }
+}
+```
+
+Awesome! Now you know how to charge a card. In next section of the guides, we'll show you how to payout your merchant (i.e. seller). 
+
+
+## Credit a Bank Account
+Now that you've mastered the art of the card debit, we'll show you how to credit (i.e. payout) one of your buyers.
+
+A credit is a `Transfer` where funds are sent to a bank account via ACH deposit. 
+
+Before we can issue a credit, we'll need to create and underwrite an `Identity` so that they can act as a seller and have funds disbursed to their bank account.
+
+
+
+### Create an Identity
+This first request should seem familiar. 
+
+```curl
+curl http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities \
+    -H "Content-Type: application/vnd.json+api" \
+    -u USwyuGJdVcsRTzDeX9smLVGQ:968cb207-1abb-4100-9425-9a723e99eb10 \
+    -d '{"tags": {"key": "value"}, "entity": {"last_name": "saget", "phone": "1234567890", "personal_address": {"city": "San Mateo", "country": "USA", "region": "CA", "line2": "Apartment 7", "line1": "741 Douglass St", "postal_code": "94114"}, "business_name": "business inc", "business_address": {"city": "San Mateo", "country": "USA", "region": "CA", "line2": "Apartment 8", "line1": "741 Douglass St", "postal_code": "94114"}, "tax_id": "5779", "business_type": "LIMITED_LIABILITY_COMPANY", "business_phone": "+1 (408) 756-4497", "first_name": "dwayne", "dob": {"year": 1978, "day": 27, "month": 5}, "business_tax_id": "123456789", "doing_business_as": "doingBusinessAs", "email": "user@example.org"}}'
+```
+You'll want to store the `id` of the newly created Identity resource as you'll reference it later. Going forward our CURL requests will use the symbol `:identity_id` to denote where you should interpolate the received `id`. 
+
+### Underwrite the Identity (i.e. card)
+Now that we have an `Identity` resource, we'll need to underwrite them to create a `Merchant` resource. Only underwritten Identities may be paid out per KYC regulations. 
+
+NOTE: For the purposes of this sandbox account, you'll see the request body includes the `processor` field, which will be removed. 
+```curl
+curl http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/:identity_id/merchants \
+    -H "Content-Type: application/vnd.json+api" \
+    -u USwyuGJdVcsRTzDeX9smLVGQ:968cb207-1abb-4100-9425-9a723e99eb10 \
+    -d '{"processor": "LITLE_V1"}'
+```
+You should a response that looks like the following:
+```json
+{
+  "id" : "MUvqNMXWWewgXT6BjMmFp9Ut",
+  "identity" : "IDqMbvakEGhj7bfm8wyPxP3s",
+  "verification" : "VIbQA4yJAnc7TFpJvAykkJ39",
+  "created_at" : "2016-01-25T19:20:58.178",
+  "updated_at" : "2016-01-25T19:20:58.178",
+  "_links" : {
+    "self" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/merchants/MUvqNMXWWewgXT6BjMmFp9Ut"
+    },
+    "identity" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDqMbvakEGhj7bfm8wyPxP3s"
+    },
+    "verifications" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/merchants/MUvqNMXWWewgXT6BjMmFp9Ut/verifications"
+    },
+    "verification" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/verifications/VIbQA4yJAnc7TFpJvAykkJ39"
+    }
+  }
+}
+```
+
+
+Now let's create a Payment Instrument which will represent a bank account. Remember you'll need to interpolate your own `:identity_id` from the previous request: 
+```curl
+curl http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments \
+    -H "Content-Type: application/vnd.json+api" \
+    -u USwyuGJdVcsRTzDeX9smLVGQ:968cb207-1abb-4100-9425-9a723e99eb10 \
+    -d '{"currency": "USD", "account_type": "SAVINGS", "name": "Fran Lemke", "bank_code": "123123123", "country": "USA", "type": "BANK_ACCOUNT", "identity": "{:identity_id}", "account_number": "123123123"}'
+```
+
+If you properly interpolated the `:identity_id` you'll recieve the following request: 
+```json
+{
+  "id" : "PIx4nVWkSE9tV2snFia47MwE",
+  "finger_print" : null,
+  "tags" : { },
+  "bank_code" : "123123123",
+  "country" : "USA",
+  "currency" : "USD",
+  "created_at" : "2016-01-26T08:59:35.308",
+  "updated_at" : "2016-01-26T08:59:35.308",
+  "_links" : {
+    "self" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIx4nVWkSE9tV2snFia47MwE"
+    },
+    "verifications" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIx4nVWkSE9tV2snFia47MwE/verifications"
+    }
+  }
+}
+```
+Be sure to store the `id` of your newly tokenized `Payment Instrument`. We'll refer to that later by the symbol `:payment_instrument_id`.
+
+### Create a Transfer (i.e. credit the bank account)
+To credit a bank account, you'll need to create a `Transfer`. 
+
+To do this we'll supply the seller's `payment_instrument_id` as the `destination`.
+NOTE: For the purposes of this sandbox account, you'll see the request body includes `processor` and  `identity` fields, which will be removed. 
+```curl
+curl http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers \
+    -H "Content-Type: application/vnd.json+api" \
+    -u USwyuGJdVcsRTzDeX9smLVGQ:968cb207-1abb-4100-9425-9a723e99eb10 \
+    -d '{"currency": "USD", "amount": 100000, "destination": ":payment_instrument_id", "processor": "LITLE_V1", "identity": "IDrGNFoCRV6SuGLHwkU8FVv3"}'
+```
+
+If the Transfer was successful you'll see the following response: 
+```json
+{
+  "id" : "TRiqyTRAFx2ey4uSuSKzjDd5",
+  "amount" : 100000,
+  "tags" : { },
+  "state" : "PENDING",
+  "trace_id" : null,
+  "currency" : "USD",
+  "source" : null,
+  "destination" : "PIi98CoYWpQZi8w7ZimJxuJ",
+  "created_at" : "2016-01-26T09:03:18.908",
+  "updated_at" : "2016-01-26T09:03:18.908",
+  "_links" : {
+    "self" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers/TRiqyTRAFx2ey4uSuSKzjDd5"
+    },
+    "reversals" : {
+      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers/TRiqyTRAFx2ey4uSuSKzjDd5/reversals"
+    }
+  }
+}
+```
+
+That's it! Now you can charge a seller, and payout your merchants.   
+
+
+
+## Collecting Your Fees
+Now that you know how to collect and disburse funds you're probably asking yourself, "So how do I take my cut?" Easy. After underwritting a `Merchant` you'll want to create a `Fee Strategy`.  `Fee Strategies` represent a predefined set of parameters for deducting your fees (e.g. % of Transfer, fixed $ amount per Transfer, etc.).  A merchant's `Fee Strategy` is automatically applied, deducted, and credited to your account before settling any of its `Transfers`. Note, these fees will be capped at the total `Transfers` amount.
+
+### Quick Example
+In this example we'll use our example platform, `cURL: The Uber for Personal Trainers` to demonstrate a common fee handling scenario.
+cURL provides a platform for individuals to find and hire the best local personal trainers. In this case the trainers are the merchants, while the trainees are the buyers.
+
+
+cURL's service fee is 10%, and thus, you create a `Fee Strategy` with a simple 10% fee for all your `Transfers`. 
+
+So, say Tim lists a one hour crossfit course for $100.00. Bob decides to take this course - costing him $100.00.
+
+
+1. You initiate a `Transfer` that charges Bob's credit card $100.00.
+2. $90.00 are settled to Tim's bank account (i.e. 10% of $100 is $10, and $100 minus the $10 fee is $90)
+3. The remaining $10 are automatically credited to your account.
+
+
+
+# Group Identities
+An Identity resource represents a business or person. Payment Instrument resources may be as    sociated to an Identity.
+
+
+## Create [/identities]
+
+### Create a New Identity [POST]
+
++ Request (application/vnd.json+api)
+    + Headers
+
+            Authorization: Basic VVN3eXVHSmRWY3NSVHpEZVg5c21MVkdROjk2OGNiMjA3LTFhYmItNDEwMC05NDI1LTlhNzIzZTk5ZWIxMA==
+
+    
+    + Attributes
+
+        + first_name: Dwayne (string, optional) - First name of the customer or representative of the business 
+        + last_name: Johnson (string, optional) - Last name of the customer or representative of the business 
+        + tax_id: 5779 (string, optional) - Last four digits of the Social Security Number of the customer or representative of the business 
+        + day: 1 (number, optional) - Day field of date of birth 
+        + month: February is 2 (number, optional) - Month field of date of birth 
+        + year: 1988 (string, optional) - Year field of date of birth 
+        + phone: 1408756449 (string, optional) - Phone number of the person. Note: There's a separate field for the business phone number 
+        + email: someone@example.com (string, optional) - Email address of the customer or representative of the business. 
+        + business_name: Business, Inc. (string, optional) - Full legal business name if the Identity is a business 
+        + doing_business_as: Bob's Burgers (string, optional) - Name business is using with customers if different from its legal name 
+        + business_type: LIMITED_LIABILITY_COMPANY (string, optional) - The type of business 
+        + business_tax_id: 123456789 (string, optional) - Employee Identification Number of the business if the customer is a business
+        + business_phone: 0123456789 (string, optional) - Phone number of the business 
+        + mcc: 1520 (number, optional) - MCC code for the business 
+        + settlement_bank_account: PIvmSjVFkMaMbUnkjM9yJq6D (string, optional) - (ID of the default Payment Instrument used to settle funds 
+        + settlement_currency: USD (string, optional) - Default currency used when settling funds to this Identity 
+        + max_transaction_amount: 100 (number, optional) - Maximum transaction allowed for the Identity in cents 
+
+    + Body
+    
+            {
+                "tags": {
+                    "key": "value"
+                },
+                "entity": {
+                "last_name": "saget",
+                "phone": "1234567890",
+                "personal_address": {
+                    "city": "San Mateo",
+                    "country": "USA",
+                    "region": "CA",
+                    "line2": "Apartment 7",
+                    "line1": "741 Douglass St",
+                    "postal_code": "94114"
+                },
+                "business_name": "business inc",
+                "business_address": {
+                    "city": "San Mateo",
+                    "country": "USA",
+                    "region": "CA",
+                    "line2": "Apartment 8",
+                    "line1": "741 Douglass St",
+                    "postal_code": "94114"
+                },
+                "tax_id": "5779",
+                "business_type": "LIMITED_LIABILITY_COMPANY",
+                "business_phone": "+1 (408) 756-4497",
+                "first_name": "dwayne",
+                "dob": {
+                    "year": 1978,
+                    "day": 27,
+                    "month": 5
+                },
+                "business_tax_id": "123456789",
+                "doing_business_as": "doingBusinessAs",
+                "email": "user@example.org"
+                }
+            }
+
+
++ Response 201 (application/json)
+
+    + Body
+
+            {
+              "id" : "IDifJWfne6Fh9zgiBU4bamaV",
+              "entity" : {
+                "first_name" : "dwayne",
+                "last_name" : "saget",
+                "email" : "user@example.org",
+                "business_name" : "business inc",
+                "business_type" : "LIMITED_LIABILITY_COMPANY",
+                "doing_business_as" : "doingBusinessAs",
+                "phone" : "1234567890",
+                "business_phone" : "+1 (408) 756-4497",
+                "tax_id" : "5779",
+                "business_tax_id" : "123456789",
+                "personal_address" : {
+                  "line1" : "741 Douglass St",
+                  "line2" : "Apartment 7",
+                  "city" : "San Mateo",
+                  "region" : "CA",
+                  "postal_code" : "94114",
+                  "country" : "USA"
+                },
+                "business_address" : {
+                  "line1" : "741 Douglass St",
+                  "line2" : "Apartment 8",
+                  "city" : "San Mateo",
+                  "region" : "CA",
+                  "postal_code" : "94114",
+                  "country" : "USA"
+                },
+                "mcc" : null,
+                "dob" : {
+                  "day" : 27,
+                  "month" : 5,
+                  "year" : 1978
+                },
+                "max_transaction_amount" : 0,
+                "settlement_bank_account" : null,
+                "settlement_currency" : "USD"
+              },
+              "tags" : {
+                "key" : "value"
+              },
+              "created_at" : "2016-01-25T06:26:14.678",
+              "updated_at" : "2016-01-25T06:26:14.678",
+              "_links" : {
+                "self" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDifJWfne6Fh9zgiBU4bamaV"
+                },
+                "underwriting" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDifJWfne6Fh9zgiBU4bamaV/merchants"
+                },
+                "verifications" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDifJWfne6Fh9zgiBU4bamaV/verifications"
+                }
+              }
+            }   
+
+## Retrieve  [/identities/{identity_id}]
++ Parameters
+    + identity_id (UUID) - ID of the Question in the form of an integer
+
+### Retrieve an Identity [GET]
+
++ Request (application/vnd.json+api)
+    + Headers
+
+            Authorization: Basic VVN3eXVHSmRWY3NSVHpEZVg5c21MVkdROjk2OGNiMjA3LTFhYmItNDEwMC05NDI1LTlhNzIzZTk5ZWIxMA==
+
++ Response 200 (application/json)
+    
+    + Body
+    
+            {
+              "id" : "IDifJWfne6Fh9zgiBU4bamaV",
+              "entity" : {
+                "first_name" : "dwayne",
+                "last_name" : "saget",
+                "email" : "user@example.org",
+                "business_name" : "business inc",
+                "business_type" : "LIMITED_LIABILITY_COMPANY",
+                "doing_business_as" : "doingBusinessAs",
+                "phone" : "1234567890",
+                "business_phone" : "+1 (408) 756-4497",
+                "tax_id" : "5779",
+                "business_tax_id" : "123456789",
+                "personal_address" : {
+                  "line1" : "741 Douglass St",
+                  "line2" : "Apartment 7",
+                  "city" : "San Mateo",
+                  "region" : "CA",
+                  "postal_code" : "94114",
+                  "country" : "USA"
+                },
+                "business_address" : {
+                  "line1" : "741 Douglass St",
+                  "line2" : "Apartment 8",
+                  "city" : "San Mateo",
+                  "region" : "CA",
+                  "postal_code" : "94114",
+                  "country" : "USA"
+                },
+                "mcc" : null,
+                "dob" : {
+                  "day" : 27,
+                  "month" : 5,
+                  "year" : 1978
+                },
+                "max_transaction_amount" : 0,
+                "settlement_bank_account" : null,
+                "settlement_currency" : "USD"
+              },
+              "tags" : {
+                "key" : "value"
+              },
+              "created_at" : "2016-01-25T06:26:14.678",
+              "updated_at" : "2016-01-25T06:26:14.678",
+              "_links" : {
+                "self" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDifJWfne6Fh9zgiBU4bamaV"
+                },
+                "underwriting" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDifJWfne6Fh9zgiBU4bamaV/merchants"
+                },
+                "verifications" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDifJWfne6Fh9zgiBU4bamaV/verifications"
+                }
+              }
+            }  
+            
+            
+## Underwrite [/identities/{identity_id}/merchants]
++ Parameters
+    + identity_id (UUID) - ID of the Identity in the form of an integer
+
+### Underwrite an Identity [POST]
+
+Underwrite a previously created Identity resource so that they can act as a seller and have funds disbursed to their bank account.
+
++ Request (application/vnd.json+api)
+    + Headers
+
+            Authorization: Basic VVN3eXVHSmRWY3NSVHpEZVg5c21MVkdROjk2OGNiMjA3LTFhYmItNDEwMC05NDI1LTlhNzIzZTk5ZWIxMA==
+    
+    + Attributes
+    
+        + processor: LITLE_V1 (string, required) - Processor where the identity will be underwritten (Internal data field that will be abstracted), please use "LITLE_V1" for now to test the API.
+
+    + Body
+        
+                {
+                    "processor": "LITLE_V1"
+                }
+
++ Response 200 (application/json)
+
+    + Body
+    
+            {
+              "id" : "MUvqNMXWWewgXT6BjMmFp9Ut",
+              "identity" : "IDqMbvakEGhj7bfm8wyPxP3s",
+              "verification" : "VIbQA4yJAnc7TFpJvAykkJ39",
+              "created_at" : "2016-01-25T19:20:58.178",
+              "updated_at" : "2016-01-25T19:20:58.178",
+              "_links" : {
+                "self" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/merchants/MUvqNMXWWewgXT6BjMmFp9Ut"
+                },
+                "identity" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDqMbvakEGhj7bfm8wyPxP3s"
+                },
+                "verifications" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/merchants/MUvqNMXWWewgXT6BjMmFp9Ut/verifications"
+                },
+                "verification" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/verifications/VIbQA4yJAnc7TFpJvAykkJ39"
+                }
+              }
+            }
+    
+    
+# Group Merchants
+An Identity resource represents a business or person. Payment Instrument resources may be associated to an Identity.
+
+
+## Merchants Collection [/merchants]
+
+## Create [/identities/{identity_id}/merchants]
++ Parameters
+    + identity_id (UUID) - ID of the Identity in the form of an integer
+
+### Create a New Merchant [POST]
+To create a Merchant you must underwrite an Identity resource .
+
++ Request (application/vnd.json+api)
+
+    + Headers
+
+            Authorization: Basic VVN3eXVHSmRWY3NSVHpEZVg5c21MVkdROjk2OGNiMjA3LTFhYmItNDEwMC05NDI1LTlhNzIzZTk5ZWIxMA==
+    
+    + Attributes
+    
+        + processor: LITLE_V1 (string, required) - Processor where the identity will be underwritten (Internal data field that will be abstracted), please use "LITLE_V1" for now to test the API.
+
+    + Body
+        
+                {
+                    "processor": "LITLE_V1"
+                }
+
+
++ Response 200 (application/json)
+
+    + Body
+    
+            {
+              "id" : "MUvqNMXWWewgXT6BjMmFp9Ut",
+              "identity" : "IDqMbvakEGhj7bfm8wyPxP3s",
+              "verification" : "VIbQA4yJAnc7TFpJvAykkJ39",
+              "created_at" : "2016-01-25T19:20:58.178",
+              "updated_at" : "2016-01-25T19:20:58.178",
+              "_links" : {
+                "self" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/merchants/MUvqNMXWWewgXT6BjMmFp9Ut"
+                },
+                "identity" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDqMbvakEGhj7bfm8wyPxP3s"
+                },
+                "verifications" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/merchants/MUvqNMXWWewgXT6BjMmFp9Ut/verifications"
+                },
+                "verification" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/verifications/VIbQA4yJAnc7TFpJvAykkJ39"
+                }
+              }
+            }
+
+
+## Retrieve [/merchants/{merchant_id}]
++ Parameters
+    + merchant_id (UUID) - ID of the Merchant in the form of an integer
+
+### Retrieve a Merchant [GET]
++ Request (application/vnd.json+api)
+    
+    + Headers
+
+            Authorization: Basic VVN3eXVHSmRWY3NSVHpEZVg5c21MVkdROjk2OGNiMjA3LTFhYmItNDEwMC05NDI1LTlhNzIzZTk5ZWIxMA==
+            
++ Response 200 (application/json)
+
+    + Body
+    
+            {
+              "id" : "MUvqNMXWWewgXT6BjMmFp9Ut",
+              "identity" : "IDqMbvakEGhj7bfm8wyPxP3s",
+              "verification" : null,
+              "created_at" : "2016-01-25T19:20:57.992093",
+              "updated_at" : "2016-01-25T19:20:57.992093",
+              "_links" : {
+                "self" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/merchants/MUvqNMXWWewgXT6BjMmFp9Ut"
+                },
+                "identity" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/identities/IDqMbvakEGhj7bfm8wyPxP3s"
+                },
+                "verifications" : {
+                  "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/merchants/MUvqNMXWWewgXT6BjMmFp9Ut/verifications"
+                }
+              }
+            }
+
+# Group Payment Instruments
+A Payment Instrument resource represents either a credit card or bank account. All information is securely vaulted and referenced by an ID. A Payment Instrument may be created multiple times, and each tokenization produces a unique ID. Each ID may only be associated one time and to only one Identity. Once associated, a Payment Instrument may not be disassociated from an Identity.
+
+## Create [/payment_instruments]
+
+### Create a Card [POST]
++ Request (application/vnd.json+api)
+    
+    + Headers
+
+            Authorization: Basic VVN3eXVHSmRWY3NSVHpEZVg5c21MVkdROjk2OGNiMjA3LTFhYmItNDEwMC05NDI1LTlhNzIzZTk5ZWIxMA==
+
+    + Attributes
+    
+        + identity: IDf1vj1U5SA7sbGiuP9vwfn8 (string, required) (uuid) - Identity resource which the card is associated.
+        + first_name: Dwayne (string, optional) - Customer's first name on card.
+        + last_name: Johnson (string, optional) - Customer's last name on card.
+        + full_name: Dwayne Johnson (string, optional) - Customer's full name on card.
+        + type: PAYMENT_CARD (string, required) - Type of Payment Instrument. For cards input PAYMENT_CARD.
+        + number: 4111 1111 1111 1111 (string, required) - The digits of the credit card number.
+        + security_code: 123 (string, optional) - The 3-4 digit security code for the card.
+        + expiration_month: 11 (number, required) - Expiration month (e.g. 12 for December).
+        + expiration_year: 2020 (number, required) - Expiration year.
+        + available_account_type: foo (string, optional) - TBD.
+        + line1: 1423 S Joane Way (string, optional) - Street address of the associated card.
+        + line2: Apt 3 (string, optional) - Second line of the address of the associated card.
+        + city: San Mateo (string, optional) - City of the associated card.
+        + region: CA (string, optional) - State of the associated card.
+        + postal_code: 92704 (string, optional) - Postal of the associated card.
+        + country: USA (string, optional) - Country of the associated card.
+
+    + Body
+    
+            {
+            "identity": "IDe1AVug8nRAjGux1wY5JJLa",
+            "expiration_year": 2020,
+            "number": "4242424242424242",
+            "expiration_month": 12,
+            "address": {
+            "city": "San Mateo",
+            "country": "USA",
+            "region": "CA",
+            "line2": "Apartment 7",
+            "line1": "741 Douglass St",
+            "postal_code": "94114"
+            },
+            "security_code": "112",
+            "type": "PAYMENT_CARD"
+            }
+
+
++ Response 201 (application/json)
+
+    + Body
+
+            {
+                "id" : "PIvdu4jPEvrtjo9G7ZFSFyEB",
+                "finger_print" : null,
+                "tags" : { },
+                "expiration_month" : 12,
+                "expiration_year" : 2020,
+                "last_four" : "4242",
+                "created_at" : "2016-01-26T08:09:06.453",
+                "updated_at" : "2016-01-26T08:09:06.453",
+                "_links" : {
+                    "self" : {
+                      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIvdu4jPEvrtjo9G7ZFSFyEB"
+                    },
+                    "verifications" : {
+                      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIvdu4jPEvrtjo9G7ZFSFyEB/verifications"
+                    }
+                }
+            }
+
+
+### Create a Bank Account [POST]
+
++ Request (application/vnd.json+api)
+    
+    + Headers
+
+            Authorization: Basic VVN3eXVHSmRWY3NSVHpEZVg5c21MVkdROjk2OGNiMjA3LTFhYmItNDEwMC05NDI1LTlhNzIzZTk5ZWIxMA==
+
+    + Attributes
+  
+        + full_name: Dwayne Johnson (string, optional) - Customer's full name on card.
+        + identity: IDe1AVug8nRAjGux1wY5JJLa (string, required) (uuid) - Identity resource which the card is associated.
+        + account_type: SAVINGS (string, required) - Checking or Savings
+        + iban: foo (string, optional) - International Bank Account Number 
+        + type: BANK_ACCOUNT (string, required) - Type of Payment Instrument. For cards input PAYMENT_CARD.
+        + first_name: Dwayne (string, optional) - Customer's first name on bank account.
+        + last_name: Johnson (string, optional) - Customer's last name on card.
+        + account_number: 84012312415 (string, required) - Masked account number.
+        + country: USA (string, optional) - Country of the associated bank account.
+        + bank_code: 840123124 (string, required) - Routing number format. Specified in FedACH database defined by the US Federal Reserve.
+        + bic: foo (string, optional) - TBD.
+        + company_name: Bob's Burgers (string, optional) - Name of company if the bank account is a company account.
+        + currency: USD (string, optional) - Default currency used when settling funds.
+        + available_account_type: foo (string, optional) - TBD.
+
+
+    + Body
+            {
+                "currency": "USD",
+                "account_type": "SAVINGS",
+                "name": "Fran Lemke",
+                "bank_code": "123123123",
+                "country": "USA",
+                "type": "BANK_ACCOUNT",
+                "identity": "IDe1AVug8nRAjGux1wY5JJLa",
+                "account_number": "123123123"
+            }
+           
+
++ Response 201 (application/json)
+
+    + Body
+
+            {
+                "id" : "PI91vBX5ZAaT2GwZTtxa3jfp",
+                "finger_print" : null,
+                "tags" : { },
+                "bank_code" : "123123123",
+                "country" : "USA",
+                "currency" : "USD",
+                "created_at" : "2016-01-25T06:47:32.784",
+                "updated_at" : "2016-01-25T06:47:32.784",
+                "_links" : {
+                "self" : {
+                    "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PI91vBX5ZAaT2GwZTtxa3jfp"
+                    },
+                    "verifications" : {
+                    "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PI91vBX5ZAaT2GwZTtxa3jfp/verifications"
+                    }
+                }
+            }
+            
+            
+
+# Group Transfers
+A Transfer resource represents any omnidirectional flow of funds. Transfers can represent either a debit to a card, a credit to a bank account, or a refund to a card depending on the request.
+Transfers have a state attribute representing the current state of the transaction. There are three possible status values: PENDING, COMPLETED, or FAILED.
+
+
+## Create [/transfers]
+
+### Debit a Card [POST]
+A Transfer consisting of obtaining (charging) money from a card (i.e. debit).
+
++ Request (application/vnd.json+api)
+    
+    + Headers
+
+            Authorization: Basic VVN3eXVHSmRWY3NSVHpEZVg5c21MVkdROjk2OGNiMjA3LTFhYmItNDEwMC05NDI1LTlhNzIzZTk5ZWIxMA==
+
+    + Attributes
+    
+        + source: PIvmSjVFkMaMbUnkjM9yJq6D (string, required) - The Payment Instrument to debited.
+        + identity: IDf1vj1U5SA7sbGiuP9vwfn8 (string, required) - UID.
+        + amount: 100 (number, required) - The amount of the debit in cents.
+
+
+
+    + Body
+    
+            {
+            "currency" : "USD",
+            "source": "PItgzimYnXFBVcBkn9gRS1yW",
+            "processor":"LITLE_V1",
+            "identity":"IDe1AVug8nRAjGux1wY5JJLa",
+            "amount" : 100
+            }
+            
+
++ Response 201 (application/json)
+
+    + Body
+
+            {
+                "id" : "PIvdu4jPEvrtjo9G7ZFSFyEB",
+                "finger_print" : null,
+                "tags" : { },
+                "expiration_month" : 12,
+                "expiration_year" : 2020,
+                "last_four" : "4242",
+                "created_at" : "2016-01-26T08:09:06.453",
+                "updated_at" : "2016-01-26T08:09:06.453",
+                "_links" : {
+                    "self" : {
+                      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIvdu4jPEvrtjo9G7ZFSFyEB"
+                    },
+                    "verifications" : {
+                      "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/payment_instruments/PIvdu4jPEvrtjo9G7ZFSFyEB/verifications"
+                    }
+                }
+            }
+            
+            
+### Credit a Bank Account [POST]
+A Transfer consisting of sending money to a bank account (i.e. credit).
+
++ Request (application/vnd.json+api)
+    
+    + Headers
+
+            Authorization: Basic VVN3eXVHSmRWY3NSVHpEZVg5c21MVkdROjk2OGNiMjA3LTFhYmItNDEwMC05NDI1LTlhNzIzZTk5ZWIxMA==
+
+    + Attributes
+    
+        + destination: PIdX4dGe57HXjpzfgK2oN6cN (string, required) - The Payment Instrument to credited.
+        + identity: IDf1vj1U5SA7sbGiuP9vwfn8 (string, required) - UID.
+        + amount: 100 (number, required) - The amount of the credit in cents.
+
+    + Body
+    
+            {
+              "currency" : "USD",
+              "destination": "PIi98CoYWpQZi8w7ZimJxuJ",
+              "processor":"LITLE_V1",
+              "identity":"IDe1AVug8nRAjGux1wY5JJLa",
+              "amount" : 100
+            }
+            
+
++ Response 201 (application/json)
+
+    + Body
+
+            {
+                "id" : "TR99r6z7uV7S6UBcnATed3u5",
+                "amount" : 100,
+                "tags" : { },
+                "state" : "PENDING",
+                "trace_id" : null,
+                "currency" : "USD",
+                "source" : null,
+                "destination" : "PIbrHKHPsaTRTifnLqfc72pG",
+                "created_at" : "2016-01-25T19:54:46.498",
+                "updated_at" : "2016-01-25T19:54:46.498",
+                "_links" : {
+                "self" : {
+                "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers/TR99r6z7uV7S6UBcnATed3u5"
+                },
+                "reversals" : {
+                "href" : "http://b-processing-staging-01-9kcywb6umx.elasticbeanstalk.com/transfers/TR99r6z7uV7S6UBcnATed3u5/reversals"
+                }
+                }
+            }
+
+
+### Reverse a Debit [POST]
+A Transfer representing a refund of a debit transaction. The amount of the refund may be any value up to the amount of the original debit.
+
++ Request (application/vnd.json+api)
+    
+    + Headers
+
+            Authorization: Basic VVN3eXVHSmRWY3NSVHpEZVg5c21MVkdROjk2OGNiMjA3LTFhYmItNDEwMC05NDI1LTlhNzIzZTk5ZWIxMA==
+
+    + Attributes
+    
+        + refund_amount: 100 (number, required) - The amount of the refund in cents. Must be equal to or less than the amount of the original debit.
+
+    + Body
+    
+            {
+              "refund_amount" : 100
+            }
+            
+
++ Response 201 (application/json)
+
+    + Body
+
+            
+    
+            
